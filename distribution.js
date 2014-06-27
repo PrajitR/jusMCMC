@@ -29,6 +29,18 @@ function gaussian_sample(mean, variance, num_samples) {
   }
 }
 
+function n_gaussian_sample(arr) {
+  if (!Array.isArray(arr)) {
+    return gaussian_sample(arr);
+  } else {
+    var samples = Array(arr.length);
+    for (var i = 0, len = arr.length; i < len; i++) {
+      samples[i] = gaussian_sample(arr[i]);
+    }
+    return samples;
+  }
+}
+
 function gaussian_pdf(x, mean, variance) {
   mean = mean || 0;
   variance = variance || 1;
@@ -38,5 +50,5 @@ function gaussian_pdf(x, mean, variance) {
   return Math.exp(-0.5 * Math.log(2 * Math.PI) - Math.log(std) - Math.pow(x - mean, 2) / (2 * variance));
 }
 
-var distribution = { normal_sample: gaussian_sample, normal_pdf: gaussian_pdf};
+var distribution = { normal_sample: n_gaussian_sample, normal_pdf: gaussian_pdf };
 module.exports = distribution;
