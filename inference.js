@@ -1,26 +1,45 @@
 var distribution = require('./distribution');
 
-function metropolis_hastings(P, n_samples, Q, proposal, pos0) {
+function metropolis_hastings(P, n_samples, n_args, args, pos0, Q, proposal) {
   Q = Q || function (_) { return 0; } // Log symmetrical distribution. Becomes Metropolis algorithm.
   proposal = proposal || distribution.normal_sample;
-  var pos = pos0 || 0, new_pos, log_prob, new_prob, 
-      old_prob = P(pos) + Q(pos), samples = [pos];
+  var pos = initialPosition(pos0, n_args), 
+      new_pos, 
+      log_prob, 
+      samples = Array(n_samples),
+      p_args = joinArgs(pos, args),
+      new_prob, 
+      old_prob = P.apply(this, p_args) + Q(pos);
 
+  samples[0] = pos;
   for (var i = 1; i < n_samples; i++) { 
     new_pos = proposal(pos);
-    new_prob = P(new_pos) + Q(new_pos);
+    p_args = joinArgs(new_pos, args);
+    new_prob = P.apply(this, p_args) + Q(new_pos);
     log_prob = new_prob - old_prob;
     if (Math.log(Math.random()) < log_prob) {
       pos = new_pos;
       old_prob = new_prob;
     }
-    samples.push(pos);
+    samples[i] = pos;
   }
 
   return samples;
 }
 
-var samples = metropolis_hastings(function(x) { 
-    return Math.log(distribution.normal_pdf(x, +process.argv[3] || null, +process.argv[4] || 0));
-  }, +process.argv[2] | 1000);
-console.log(JSON.stringify(samples));
+function initialPosition(pos0, n_args) {
+  var pos = pos0 || 0;
+  if (!pos0 && n_args > 1) { 
+    pos = [];
+    for (var i = 0; i < n_args; i++) { 
+      pos.push(0); 
+    } 
+  }
+  return pos;
+}
+
+function joinArgs(main, extra_args) {
+  return [main].concat(extra_args || []);
+}
+
+module.exports = { 'run': metropolis_hastings };
