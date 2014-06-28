@@ -51,9 +51,9 @@ function gaussian_pdf(x, mean, variance) {
 }
 
 function scaling_factor(a) {
+  // Taken from emcee source code (ensemble.py: _propose_stretch)
   a = a || 2;
-  var u = Math.random();
-  return a / (1 + a) * (-1 + 2 * u + a * Math.pow(u, 2));
+  return Math.pow((a - 1) * Math.random() + 1, 2) / a;
 }
 
 var distribution = 

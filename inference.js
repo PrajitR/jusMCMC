@@ -12,7 +12,7 @@ function affine_invariant(P, n_samples, n_walkers, n_args, args, pos0) {
       z;
 
   for (var i = 0; i < n_walkers; i++) {
-    walkers[i] = initialPosition(null, n_args);
+    walkers[i] = initialPosition(pos0, n_args);
     old_probs[i] = P.apply(this, joinArgs(walkers[i], args));
   }
       
@@ -29,7 +29,8 @@ function affine_invariant(P, n_samples, n_walkers, n_args, args, pos0) {
         }
       }
       new_prob = P.apply(this, joinArgs(new_pos, args));
-      if (Math.log(Math.random()) < (new_prob - old_probs[j])) {
+      log_prob = (n_args - 1) + Math.log(z) + new_prob - old_probs[j];
+      if (Math.log(Math.random()) < log_prob) {
         walkers[j] = new_pos;
         old_probs[j] = new_prob;
       }
@@ -69,12 +70,21 @@ function metropolis_hastings(P, n_samples, n_args, args, pos0, Q, proposal) {
 
 function initialPosition(pos0, n_args) {
   var pos = pos0 || Math.random() * 2 - 1;
-  if (!pos0 && n_args > 1) { 
-    pos = [];
+  if (n_args > 1) {
+    if (!pos0) { 
+      pos = [];
+      for (var i = 0; i < n_args; i++) { 
+        pos.push(Math.random() * 2 - 1); 
+      } 
+    } else {
+      pos = pos0.slice();
+    }
+
     for (var i = 0; i < n_args; i++) { 
-      pos.push(Math.random() * 2 - 1); 
-    } 
+      pos[i] += .0001 * (Math.random() * 2 - 1); 
+    }
   }
+
   return pos;
 }
 
