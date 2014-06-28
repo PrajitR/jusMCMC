@@ -4,9 +4,9 @@ var mcmc = require('./inference'),
 
 function basic_normal() {
   var samples = mcmc.run(function(x) { 
-      return Math.log(distribution.normal_pdf(x, +process.argv[3] || null, +process.argv[4] || 0));
-    }, +process.argv[2] || 1000, 1);
-  console.log(JSON.stringify(samples));
+      return Math.log(distribution.normal_pdf(x, +process.argv[3] || null, +process.argv[4] || null));
+    }, +process.argv[2] || 3, 10, 1);
+  console.log(JSON.stringify([].concat.apply([], samples)));
   return samples;
 }
 
@@ -41,7 +41,10 @@ function linear_fit() {
     return lp + lnlikelihood(theta, x, y, yerr);
   }
 
-  var samples = mcmc.run(lnprob, 1000, 3, [data['x'], data['y'], data['yerr']], [-1, 4.5, 0.454]);
-  console.log(JSON.stringify(samples));
+  var samples = mcmc.run(lnprob, 100, 10, 3, [data['x'], data['y'], data['yerr']], [-1, 4.5, 0.454]);
+  console.log(JSON.stringify([].concat.apply([], samples)));
   return samples;
 }
+
+//basic_normal();
+linear_fit();

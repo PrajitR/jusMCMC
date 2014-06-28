@@ -50,5 +50,13 @@ function gaussian_pdf(x, mean, variance) {
   return Math.exp(-0.5 * Math.log(2 * Math.PI) - Math.log(std) - Math.pow(x - mean, 2) / (2 * variance));
 }
 
-var distribution = { normal_sample: n_gaussian_sample, normal_pdf: gaussian_pdf };
+function scaling_factor(a) {
+  a = a || 2;
+  var u = Math.random();
+  return a / (1 + a) * (-1 + 2 * u + a * Math.pow(u, 2));
+}
+
+var distribution = 
+  { normal_sample: n_gaussian_sample, normal_pdf: gaussian_pdf,
+    scaling_factor: scaling_factor };
 module.exports = distribution;
