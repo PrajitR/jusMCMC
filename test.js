@@ -27,7 +27,7 @@ function linear_fit() {
         len = x.length, sum = 0;
     for (var i = 0; i < len; i++) {
       var yhat = m * x[i] + b, 
-          inv_sigma = 1.0 / (Math.pow(yhat, 2) + Math.pow(yhat, 2) * Math.exp(2 * lnf));
+          inv_sigma = 1.0 / (Math.pow(yerr[i], 2) + Math.pow(yhat, 2) * Math.exp(2 * lnf));
       sum += Math.pow(y[i] - yhat, 2) * inv_sigma - Math.log(inv_sigma);
     }
     return -0.5 * sum;
@@ -41,8 +41,15 @@ function linear_fit() {
     return lp + lnlikelihood(theta, x, y, yerr);
   }
 
-  var samples = mcmc.run(lnprob, 100, 10, 3, [data['x'], data['y'], data['yerr']], [-1, 4.5, 0.454]);
+  // Affine Invariant
+  var samples = mcmc.run(lnprob, 500, 100, 3, [data['x'], data['y'], data['yerr']], 
+      [-1.003, 4.528, Math.log(0.454)]);
   console.log(JSON.stringify([].concat.apply([], samples)));
+ 
+  // M-H
+  //var samples = mcmc.run(lnprob, 1000, 3, [data['x'], data['y'], data['yerr']], [-1, 4.5, 0.454]);
+  //console.log(JSON.stringify(samples));
+
   return samples;
 }
 
