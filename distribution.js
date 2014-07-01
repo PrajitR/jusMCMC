@@ -1,3 +1,17 @@
+function sample_n_dim(sample) {
+  return function(arr) {
+    if (!Array.isArray(arr)) {
+      return sample(arr);
+    } else {
+      var samples = Array(arr.length);
+      for (var i = 0, len = arr.length; i < len; i++) {
+        samples[i] = sample(arr[i]);
+      }
+      return samples;
+    }
+  }
+}
+
 // Sample from a Gaussian distribution parameterized by mean and variance.
 function gaussian_sample(mean, variance, num_samples) {
   // Use Box-Muller transform.
@@ -29,18 +43,6 @@ function gaussian_sample(mean, variance, num_samples) {
   }
 }
 
-function n_gaussian_sample(arr) {
-  if (!Array.isArray(arr)) {
-    return gaussian_sample(arr);
-  } else {
-    var samples = Array(arr.length);
-    for (var i = 0, len = arr.length; i < len; i++) {
-      samples[i] = gaussian_sample(arr[i]);
-    }
-    return samples;
-  }
-}
-
 function gaussian_pdf(x, mean, variance) {
   mean = mean || 0;
   variance = variance || 1;
@@ -50,13 +52,26 @@ function gaussian_pdf(x, mean, variance) {
   return Math.exp(-0.5 * Math.log(2 * Math.PI) - Math.log(std) - Math.pow(x - mean, 2) / (2 * variance));
 }
 
+// From "Multiplicative random walk Metropolis-Hastings on the real line"
+// arxix.org/abs/1008.5227
+function random_dive_sample(x) {
+  var epsilon = Math.random() * 2 - 1; // (-1,1)
+  if (epsilon == 0) { // Prevent division by 0 errors.
+    return 0;
+  }
+  return (Math.random() < .5 ? x * epsilon : x / epsilon);
+}
+
 function scaling_factor(a) {
   // Taken from emcee source code (ensemble.py: _propose_stretch)
   a = a || 2;
   return Math.pow((a - 1) * Math.random() + 1, 2) / a;
 }
 
-var distribution = 
-  { normal_sample: n_gaussian_sample, normal_pdf: gaussian_pdf,
-    scaling_factor: scaling_factor };
+var distribution = { 
+  normal_sample: sample_n_dim(gaussian_sample), 
+  normal_pdf: gaussian_pdf,
+  scaling_factor: scaling_factor,
+  random_dive: sample_n_dim(random_dive_sample)
+};
 module.exports = distribution;

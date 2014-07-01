@@ -43,7 +43,7 @@ function affine_invariant(P, n_samples, n_walkers, n_args, args, pos0) {
 
 function metropolis_hastings(P, n_samples, n_args, args, pos0, Q, proposal) {
   Q = Q || function (_) { return 0; } // Log symmetrical distribution. Becomes Metropolis algorithm.
-  proposal = proposal || distribution.normal_sample;
+  proposal = proposal || distribution.random_dive;
   var pos = initialPosition(pos0, n_args), 
       new_pos, 
       log_prob, 
