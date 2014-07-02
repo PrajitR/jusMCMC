@@ -1,3 +1,7 @@
+// Various sampling distributions. Used to generate Normal curves or 
+// scaling coefficients for various MCMC algorithms.
+
+// For each variable we're exploring, create a new sample.
 function sample_n_dim(sample) {
   return function(arr) {
     var samples = Array(arr.length);
@@ -8,16 +12,15 @@ function sample_n_dim(sample) {
   }
 }
 
-// Sample from a Gaussian distribution parameterized by mean and variance.
-function gaussian_sample(mean, variance, num_samples) {
-  // Use Box-Muller transform.
-  // From http://stats.stackexchange.com/a/16350
+// Sample from a Gaussian distribution parameterized by mean and standard deviation.
+function gaussian_sample(mean, std, num_samples) {
   mean = mean || 0;
-  variance = variance || 1;
+  std = std || 1;
   num_samples = num_samples || 1;
-  var std = Math.sqrt(variance);
 
   function sample() {
+    // Use Box-Muller transform.
+    // From http://stats.stackexchange.com/a/16350
     var w = 1, u, v;
     while (w >= 1) {
       u = 2 * Math.random() - 1;
@@ -28,17 +31,14 @@ function gaussian_sample(mean, variance, num_samples) {
     return std * (u * z) + mean;
   }
 
-  if (num_samples == 1) {
-    return sample();
-  } else {
-    var samples = [];
-    for (var i = 0; i < num_samples; i++) {
-      samples.push(sample());
-    }
-    return samples;
+  var samples = [];
+  for (var i = 0; i < num_samples; i++) {
+    samples.push(sample());
   }
+  return samples;
 }
 
+// Probability of x given a Gaussian paramterized by mean and standard deviation.
 function gaussian_pdf(x, mean, std) {
   mean = mean || 0;
   std = std || 1;
@@ -47,28 +47,31 @@ function gaussian_pdf(x, mean, std) {
   return Math.exp(-0.5 * Math.log(2 * Math.PI) - Math.log(std) - Math.pow(x - mean, 2) / (2 * std * std));
 }
 
-// From "Multiplicative random walk Metropolis-Hastings on the real line"
+// From "Multiplicative random walk Metropolis-Hastings on the real line".
 // arxix.org/abs/1008.5227
 function random_dive_sample(x) {
   var new_pos = Array(x.length),
       coeff = random_dive_coeff();
+  // Scale x by coeff.
   for (var i = 0; i < x.length; i++) {
     new_pos[i] = x[i] * coeff;
   }
   return [new_pos, coeff];
 }
 
+// Generate a random dive coefficient by sampling
 function random_dive_coeff() {
-  var epsilon = Math.random() * 2 - 1; // (-1,1)
+  var epsilon = Math.random() * 2 - 1; // [-1,1)
   if (epsilon == 0) { // Prevent division by 0 errors.
     return 0;
   }
-  var coeff = Math.pow(epsilon, (Math.random() < .5 ? 1 : -1)); // Either e or 1/e.
+  var coeff = Math.random() < .5 ? epsilon : 1 / epsilon; // Stretch or contract with 50% probability.
   return coeff;
 }
 
+// Create a scaling factor for Affine-Invariant MCMC.
 function scaling_factor(a) {
-  // Taken from emcee source code (ensemble.py: _propose_stretch)
+  // Adapted from emcee source code (ensemble.py: _propose_stretch)
   a = a || 2;
   return Math.pow((a - 1) * Math.random() + 1, 2) / a;
 }
