@@ -29,7 +29,7 @@ function affine_invariant(P, n_samples, n_walkers, n_args, args, pos0) {
         }
       }
       new_prob = P.apply(this, joinArgs(new_pos, args));
-      log_prob = (n_args - 1) + Math.log(z) + new_prob - old_probs[j];
+      log_prob = (n_args - 1) * Math.log(z) + new_prob - old_probs[j];
       if (Math.log(Math.random()) < log_prob) {
         walkers[j] = new_pos;
         old_probs[j] = new_prob;
