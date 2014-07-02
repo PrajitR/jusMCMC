@@ -1,12 +1,13 @@
 var distribution = require('./distribution');
 
-function affine_invariant(P, n_samples, n_walkers, n_args, args, pos0) {
+function affine_invariant(P, n_samples, n_walkers, pos0, args) {
   var walkers = Array(n_walkers),
-      new_pos = [],
-      old_probs = [],
+      new_pos,
+      old_probs = Array(n_walkers),
       new_prob,
       log_prob,
       p_args,
+      n_args = pos0.length,
       samples = Array(n_samples),
       xj,
       z;
@@ -18,15 +19,11 @@ function affine_invariant(P, n_samples, n_walkers, n_args, args, pos0) {
       
   for (var i = 0; i < n_samples; i++) {
     for (var j = 0; j < n_walkers; j++) {
-      new_pos = [];
+      new_pos = Array(n_args);
       xj = walkers[getRandomIndex(j, n_walkers)];
       z = distribution.scaling_factor();
-      if (n_args == 1) {
-        new_pos = xj + z * (walkers[j] - xj);
-      } else {
-        for (var k = 0; k < n_args; k++) {
-          new_pos[k] = xj[k] + z * (walkers[j][k] - xj[k]);
-        }
+      for (var k = 0; k < n_args; k++) {
+        new_pos[k] = xj[k] + z * (walkers[j][k] - xj[k]);
       }
       new_prob = P.apply(this, joinArgs(new_pos, args));
       log_prob = (n_args - 1) * Math.log(z) + new_prob - old_probs[j];
@@ -41,12 +38,12 @@ function affine_invariant(P, n_samples, n_walkers, n_args, args, pos0) {
   return samples;
 }
 
-function metropolis_hastings(P, n_samples, n_args, args, pos0, Q, proposal) {
+function metropolis_hastings(P, n_samples, pos0, args, Q, proposal) {
   Q = Q || function (_) { return 0; } // Log symmetrical distribution. Becomes Metropolis algorithm.
   proposal = proposal || distribution.random_dive;
-  n_args = n_args || 1;
   var pos = initialPosition(pos0, n_args), 
-      new_pos, 
+      n_args = pos0.length,
+      new_pos = Array(n_args),
       log_prob, 
       samples = Array(n_samples),
       p_args = joinArgs(pos, args),
@@ -56,38 +53,26 @@ function metropolis_hastings(P, n_samples, n_args, args, pos0, Q, proposal) {
 
   samples[0] = pos;
   for (var i = 1; i < n_samples; i++) { 
-    //new_pos = proposal(pos);
     proposal_info = proposal(pos).slice();
-    new_pos = proposal_info[1];
+    new_pos = proposal_info[0];
     p_args = joinArgs(new_pos, args);
     new_prob = P.apply(this, p_args) + Q(new_pos);
-    log_prob = new_prob - old_prob + Math.log(Math.abs(proposal_info[0]));
+    log_prob = new_prob - old_prob + Math.log(Math.abs(proposal_info[1]));
     if (Math.log(Math.random()) < log_prob) {
       pos = new_pos;
       old_prob = new_prob;
     }
-    samples[i] = n_args > 1 ? pos.slice() : pos;
+    samples[i] = pos.slice();
   }
 
   return samples;
 }
 
 function initialPosition(pos0, n_args) {
-  var pos = pos0 + Math.random() || Math.random() * 2 - 1;
-  if (n_args > 1) {
-    if (!pos0) { 
-      pos = [];
-      for (var i = 0; i < n_args; i++) { 
-        pos.push(Math.random() * 2 - 1); 
-      } 
-    } else {
-      pos = pos0.slice();
-    }
-    for (var i = 0; i < n_args; i++) { 
-      pos[i] += .0001 * (Math.random() * 2 - 1); 
-    }
+  var pos = pos0.slice();
+  for (var i = 0; i < n_args; i++) {
+    pos[i] += Math.random() * 2 - 1;
   }
-
   return pos;
 }
 

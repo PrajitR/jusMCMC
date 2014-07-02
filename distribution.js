@@ -1,14 +1,10 @@
 function sample_n_dim(sample) {
   return function(arr) {
-    if (!Array.isArray(arr)) {
-      return sample(arr);
-    } else {
-      var samples = Array(arr.length);
-      for (var i = 0, len = arr.length; i < len; i++) {
-        samples[i] = sample(arr[i]);
-      }
-      return samples;
+    var samples = Array(arr.length);
+    for (var i = 0, len = arr.length; i < len; i++) {
+      samples[i] = sample(arr[i]);
     }
+    return samples;
   }
 }
 
@@ -54,12 +50,21 @@ function gaussian_pdf(x, mean, std) {
 // From "Multiplicative random walk Metropolis-Hastings on the real line"
 // arxix.org/abs/1008.5227
 function random_dive_sample(x) {
+  var new_pos = Array(x.length),
+      coeff = random_dive_coeff();
+  for (var i = 0; i < x.length; i++) {
+    new_pos[i] = x[i] * coeff;
+  }
+  return [new_pos, coeff];
+}
+
+function random_dive_coeff() {
   var epsilon = Math.random() * 2 - 1; // (-1,1)
   if (epsilon == 0) { // Prevent division by 0 errors.
     return 0;
   }
   var coeff = Math.pow(epsilon, (Math.random() < .5 ? 1 : -1)); // Either e or 1/e.
-  return [coeff, x * coeff];
+  return coeff;
 }
 
 function scaling_factor(a) {
@@ -72,6 +77,6 @@ var distribution = {
   normal_sample: sample_n_dim(gaussian_sample), 
   normal_pdf: gaussian_pdf,
   scaling_factor: scaling_factor,
-  random_dive: sample_n_dim(random_dive_sample)
+  random_dive: random_dive_sample
 };
 module.exports = distribution;

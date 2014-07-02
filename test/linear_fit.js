@@ -32,13 +32,12 @@ function linear_fit() {
     return lp + lnlikelihood(theta, x, y, yerr);
   }
 
-  // Affine Invariant
-  //var samples = mcmc.run(lnprob, 500, 100, 3, [data['x'], data['y'], data['yerr']], 
-  //  [-1.003, 4.528, Math.log(0.454)]);
-  fs.writeFileSync('linear_data.json', JSON.stringify([].concat.apply([], samples)));
- 
+  // Affine-Invariant
+  //var samples = mcmc.mh(lnprob, 500, 100, [-1, 4.5, 0.454], [data['x'], data['y'], data['yerr']]);
+  //fs.writeFileSync('linear_data.json', JSON.stringify([].concat.apply([], samples)));
+
   // M-H
-  var samples = mcmc.mh(lnprob, 10000, 3, [data['x'], data['y'], data['yerr']], [-1, 4.5, 0.454]);
+  var samples = mcmc.mh(lnprob, 10000, [-1, 4.5, 0.454], [data['x'], data['y'], data['yerr']]);
   fs.writeFileSync('linear_data.json', JSON.stringify(samples));
 
   return samples;
