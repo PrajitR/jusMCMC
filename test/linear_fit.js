@@ -1,14 +1,5 @@
-var mcmc = require('./inference'),
-    distribution = require('./distribution'),
+var mcmc = require('../inference'),
     fs = require('fs');
-
-function basic_normal() {
-  var samples = mcmc.run(function(x) { 
-      return Math.log(distribution.normal_pdf(x, +process.argv[3] || null, +process.argv[4] || null));
-    }, +process.argv[2] || 3, 10, 1);
-  console.log(JSON.stringify([].concat.apply([], samples)));
-  return samples;
-}
 
 // From emcee user guide.
 function linear_fit() {
@@ -42,16 +33,15 @@ function linear_fit() {
   }
 
   // Affine Invariant
-  var samples = mcmc.run(lnprob, 500, 100, 3, [data['x'], data['y'], data['yerr']], 
-      [-1.003, 4.528, Math.log(0.454)]);
-  console.log(JSON.stringify([].concat.apply([], samples)));
+  //var samples = mcmc.run(lnprob, 500, 100, 3, [data['x'], data['y'], data['yerr']], 
+  //  [-1.003, 4.528, Math.log(0.454)]);
+  fs.writeFileSync('linear_data.json', JSON.stringify([].concat.apply([], samples)));
  
   // M-H
-  //var samples = mcmc.run(lnprob, 1000, 3, [data['x'], data['y'], data['yerr']], [-1, 4.5, 0.454]);
-  //console.log(JSON.stringify(samples));
+  var samples = mcmc.mh(lnprob, 10000, 3, [data['x'], data['y'], data['yerr']], [-1, 4.5, 0.454]);
+  fs.writeFileSync('linear_data.json', JSON.stringify(samples));
 
   return samples;
 }
 
-//basic_normal();
 linear_fit();
