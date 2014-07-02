@@ -43,13 +43,12 @@ function gaussian_sample(mean, variance, num_samples) {
   }
 }
 
-function gaussian_pdf(x, mean, variance) {
+function gaussian_pdf(x, mean, std) {
   mean = mean || 0;
-  variance = variance || 1;
-  var std = Math.sqrt(variance);
+  std = std || 1;
 
   // Taken from jsStat.distribution.normal.pdf
-  return Math.exp(-0.5 * Math.log(2 * Math.PI) - Math.log(std) - Math.pow(x - mean, 2) / (2 * variance));
+  return Math.exp(-0.5 * Math.log(2 * Math.PI) - Math.log(std) - Math.pow(x - mean, 2) / (2 * std * std));
 }
 
 // From "Multiplicative random walk Metropolis-Hastings on the real line"
@@ -59,7 +58,8 @@ function random_dive_sample(x) {
   if (epsilon == 0) { // Prevent division by 0 errors.
     return 0;
   }
-  return (Math.random() < .5 ? x * epsilon : x / epsilon);
+  var coeff = Math.pow(epsilon, (Math.random() < .5 ? 1 : -1)); // Either e or 1/e.
+  return [coeff, x * coeff];
 }
 
 function scaling_factor(a) {

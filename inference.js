@@ -44,32 +44,36 @@ function affine_invariant(P, n_samples, n_walkers, n_args, args, pos0) {
 function metropolis_hastings(P, n_samples, n_args, args, pos0, Q, proposal) {
   Q = Q || function (_) { return 0; } // Log symmetrical distribution. Becomes Metropolis algorithm.
   proposal = proposal || distribution.random_dive;
+  n_args = n_args || 1;
   var pos = initialPosition(pos0, n_args), 
       new_pos, 
       log_prob, 
       samples = Array(n_samples),
       p_args = joinArgs(pos, args),
       new_prob, 
-      old_prob = P.apply(this, p_args) + Q(pos);
+      old_prob = P.apply(this, p_args) + Q(pos),
+      proposal_info;
 
   samples[0] = pos;
   for (var i = 1; i < n_samples; i++) { 
-    new_pos = proposal(pos);
+    //new_pos = proposal(pos);
+    proposal_info = proposal(pos).slice();
+    new_pos = proposal_info[1];
     p_args = joinArgs(new_pos, args);
     new_prob = P.apply(this, p_args) + Q(new_pos);
-    log_prob = new_prob - old_prob;
+    log_prob = new_prob - old_prob + Math.log(Math.abs(proposal_info[0]));
     if (Math.log(Math.random()) < log_prob) {
       pos = new_pos;
       old_prob = new_prob;
     }
-    samples[i] = pos;
+    samples[i] = n_args > 1 ? pos.slice() : pos;
   }
 
   return samples;
 }
 
 function initialPosition(pos0, n_args) {
-  var pos = pos0 || Math.random() * 2 - 1;
+  var pos = pos0 + Math.random() || Math.random() * 2 - 1;
   if (n_args > 1) {
     if (!pos0) { 
       pos = [];
@@ -79,7 +83,6 @@ function initialPosition(pos0, n_args) {
     } else {
       pos = pos0.slice();
     }
-
     for (var i = 0; i < n_args; i++) { 
       pos[i] += .0001 * (Math.random() * 2 - 1); 
     }
